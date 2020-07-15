@@ -7,7 +7,7 @@ app.scripts.config.serve_locally = True
 app.css.config.serve_locally = True
 
 app.layout = html.Div([
-    html.H1('Hello, World!')
+    html.H1('Wills a beast')
 ])
 
 application = app.server
