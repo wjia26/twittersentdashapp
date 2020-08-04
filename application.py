@@ -22,8 +22,17 @@ def update_datatable(df,search_query_selected,create_date_selected):
     df_toptweets=pd.DataFrame(top_tweets_arr)
     df_toptweets['text']=df_toptweets['text'].str.strip()
     tablecolumns=[{'id': c, 'name': c} for c in df_toptweets.columns]
-
-    return [df_toptweets.to_dict('records'),tablecolumns]
+    tablecolumns[0]["name"]='Retweets'
+    tablecolumns[1]["name"]='Tweet'
+    tablecolumns[2]["name"]='Count'
+    tablecolumns[3]["name"]='Polarity'
+    tooltip_data=[
+        {
+            column: {'value': str(value), 'type': 'markdown'}
+            for column, value in row.items()
+        } for row in df_toptweets.to_dict('rows')
+    ]
+    return [df_toptweets.to_dict('records'),tablecolumns,tooltip_data]
 
 def update_map_fig(df,search_query_selected,create_date_selected):
     dffiltered=df[df['search_query'].isin([search_query_selected]) ].sort_values(by=['create_date'],ascending=True)
@@ -32,9 +41,12 @@ def update_map_fig(df,search_query_selected,create_date_selected):
     word_freq_arr=ast.literal_eval(word_freq_str)
     df_wf=pd.DataFrame(word_freq_arr,columns=['word','freq'])
     df_wf=df_wf.sort_values(by=['freq'],ascending=True)
-    fig_treemap = px.treemap(df_wf, height=400, path=['word'], values='freq',
-                    color='freq',color_continuous_scale='blues', title='Word Frequency Map')
-    fig_treemap=fig_treemap.update_layout(plot_bgcolor='rgba(0, 0, 0, 0)',paper_bgcolor='rgba(0, 0, 0, 0)',margin=dict(l=80, r=10, t=80, b=30))
+    df_wf[search_query_selected] = search_query_selected
+    fig_treemap = px.treemap(df_wf, height=400, path=[search_query_selected,'word'], values='freq',
+                    color='freq',color_continuous_scale='greys', title='<b>Word Frequency Map</b>')
+    fig_treemap=fig_treemap.update_layout(modebar={
+'bgcolor': 'rgba(0,0,0,0)','color': 'rgba(0,0,0,0.5)','activecolor': 'rgba(0,0,0,0.5)'
+},showlegend=False,plot_bgcolor='rgba(0, 0, 0, 0)',paper_bgcolor='rgba(0, 0, 0, 0)',margin=dict(l=80, r=10, t=80, b=30))
     return fig_treemap
 
 def fetch_data(fs):
@@ -60,7 +72,7 @@ def fetch_data(fs):
     df['create_date']=pd.to_datetime(df['create_date'])
     return df
 
-app = dash.Dash(__name__,   external_stylesheets=[dbc.themes.SIMPLEX])
+app = dash.Dash(__name__,   external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 app.scripts.config.serve_locally = True
 app.css.config.serve_locally = True
@@ -91,12 +103,14 @@ search_query_selected='#Australia'
 
 #Initialize the charts
 fig_treemap=update_map_fig(df=df,search_query_selected=search_query_selected,create_date_selected=create_date_selected)
-[datatable_object,column_object]=update_datatable(df=df,search_query_selected=search_query_selected,create_date_selected=create_date_selected)
+[datatable_object,column_object,tooltip_data]=update_datatable(df=df,search_query_selected=search_query_selected,create_date_selected=create_date_selected)
 
 ##APP LAYOUT
 app.layout = html.Div([
-    html.H1('The Tweet Sentiment Project'),
-    html.P(['Click on a specific date on the graph to see the Word Frequency and Top Tweets from that search query. Created by:',html.A(" William Jiang", href='https://iamwilliamj.com', target="_blank")]),
+    dcc.Markdown('''
+    ## The Tweet Sentiment Project
+    Click on a specific date on the graph to see the Word Frequency and Top Tweets from that search query. *Created by:* [*William Jiang*](https://iamwilliamj.com).
+    '''),
     html.Div(id='dd-output-container'),
     dcc.Dropdown(
         id='demo-dropdown',
@@ -124,15 +138,23 @@ app.layout = html.Div([
             data=datatable_object,
             columns=column_object,
             id='tweettable',
+            style_cell_conditional=[
+                {'if': {'column_id': 'text'},
+                'width': '70%'},
+            ],
             style_data={
-            'whiteSpace': 'normal',
-            'height': 'auto'
+        'overflow': 'hidden',
+        'textOverflow': 'ellipsis',
             },
-            style_cell={'textAlign': 'left'},
+            style_header={
+                'fontWeight': 'bold'
+            },
+            style_cell={'textAlign': 'left' ,       'overflow': 'hidden',
+        'textOverflow': 'ellipsis',  'maxWidth': 0,},
+            tooltip_data=tooltip_data,
+    tooltip_duration=None,
             style_table={ 'height': '80%',
              'width': '90%'},
-            # data=df_toptweets.to_dict('records'),
-            # columns=[{'id': c, 'name': c} for c in df_toptweets.columns],
             page_size=8,
             sort_action='native',
             filter_action='native'
@@ -148,7 +170,9 @@ app.layout = html.Div([
     #     """),
     #     html.Pre(id='click-data')
     # ],className='three columns')
-], style={'padding': 10})
+]
+,style={'padding': 10,'overflow-x': 'hidden'}
+)
 
 
 @app.callback(
@@ -159,11 +183,16 @@ app.layout = html.Div([
 def update_output(value):
     dffiltered=df[df['search_query'].isin(value) ].sort_values(by=['create_date'],ascending=True)
 
-    fig = px.line(dffiltered, height=400, x="create_date", y="avg_polarity", title='Sentiment over Time', color='partition_1',custom_data=['partition_0','partition_1','create_date','search_query'])
-    fig.update_layout(title='Sentiment over Time',
+    fig = px.line(dffiltered, height=400, x="create_date", y="avg_polarity", 
+        title='Sentiment over Time', color='partition_1',
+        custom_data=['partition_0','partition_1','create_date','search_query'],
+        labels={"partition_1": "Hashtag"})
+    fig.update_layout(title='<b>Sentiment over Time</b>',
                    xaxis_title='Date',
                    yaxis_title='Avg. Polarity',plot_bgcolor='rgba(0, 0, 0, 0)',paper_bgcolor='rgba(0, 0, 0, 0)'
-                   ,margin=dict(l=10, r=80, t=80, b=30)
+                   ,margin=dict(l=10, r=30, t=80, b=30,),modebar={
+'bgcolor': 'rgba(0,0,0,0)','color': 'rgba(0,0,0,0.5)','activecolor': 'rgba(0,0,0,0.5)'
+}
 )
     return [fig]
 
@@ -201,7 +230,8 @@ def change_map_click_data(clickData):
 @app.callback(
     [
     dash.dependencies.Output('tweettable', 'data'),
-    dash.dependencies.Output('tweettable', 'columns')
+    dash.dependencies.Output('tweettable', 'columns'),
+    dash.dependencies.Output('tweettable', 'tooltip_data')
     ],
     [Input('sentiment-graph', 'clickData')])
 def change_table_click_data(clickData):
@@ -218,8 +248,8 @@ def change_table_click_data(clickData):
     # df_toptweets=pd.DataFrame(top_tweets_arr)
     # df_toptweets['text']=df_toptweets['text'].str.strip()
     # tablecolumns=[{'id': c, 'name': c} for c in df_toptweets.columns]
-    datatable_object=update_datatable(df,search_query_selected=search_query_selected,create_date_selected=create_date_selected)
-    return datatable_object
+    [datatable_object,column_object,tooltip_data]=update_datatable(df,search_query_selected=search_query_selected,create_date_selected=create_date_selected)
+    return [datatable_object,column_object,tooltip_data]
 
 application = app.server
 
