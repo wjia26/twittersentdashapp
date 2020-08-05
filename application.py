@@ -78,18 +78,24 @@ app.scripts.config.serve_locally = True
 app.css.config.serve_locally = True
 app.title = 'The Tweet Sentiment Project'
 
-with open("C:/Users/William Jiang/Documents/credentials.json") as f:
-    d = json.load(f)
-    cred_json=d["twitter_api"]
-    s3_cred_json=d["s3-access"]
-##auth using s3fs
-fs = s3fs.S3FileSystem(anon=False, key=s3_cred_json['ACCESS_KEY_ID'], secret=s3_cred_json['SECRET_ACCESS_KEY'])
+local_credentials_path="C:/Users/William Jiang/Documents/credentials.json"
+
+#If Locally exists, then fetch credentials - else if you're in AWS instance then no credentials required.
+if os.path.exists(local_credentials_path):
+    with open("C:/Users/William Jiang/Documents/credentials.json") as f:
+        d = json.load(f)
+        cred_json=d["twitter_api"]
+        s3_cred_json=d["s3-access"]
+    ##auth using s3fs
+    fs = s3fs.S3FileSystem(anon=False, key=s3_cred_json['ACCESS_KEY_ID'], secret=s3_cred_json['SECRET_ACCESS_KEY'])
+else:
+    fs = s3fs.S3FileSystem(anon=False)
 
 df=fetch_data(fs)
 
 
 
-dffiltered=df[df['search_query'].isin(['#Australia'])  ].sort_values(by=['create_date'],ascending=True)
+# dffiltered=df[df['search_query'].isin(['#Australia'])  ].sort_values(by=['create_date'],ascending=True)
 
 df_unique_query=df[['partition_1','partition_0','search_query']].drop_duplicates()
 df_unique_query=df_unique_query.sort_values(by=['partition_0','partition_1'])
