@@ -115,7 +115,7 @@ fig_treemap=update_map_fig(df=df,search_query_selected=search_query_selected,cre
 app.layout = html.Div([
     dcc.Markdown('''
     ## The Tweet Sentiment Project
-    Contains a sample of around 3000 tweets per day per category.
+    Contains a sample of around 3000 tweets per day per category. Updates Daily.\
     Click on a specific date on the graph to see the Word Frequency and Top Tweets from that search query. *Created by:* [*William Jiang*](https://iamwilliamj.com).
     '''),
     html.Div(id='dd-output-container'),
