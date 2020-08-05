@@ -116,6 +116,7 @@ app.layout = html.Div([
     dcc.Markdown('''
     ## The Tweet Sentiment Project
     Contains a sample of around 3000 tweets per day per category. Updates Daily.\
+        
     Click on a specific date on the graph to see the Word Frequency and Top Tweets from that search query. *Created by:* [*William Jiang*](https://iamwilliamj.com).
     '''),
     html.Div(id='dd-output-container'),
