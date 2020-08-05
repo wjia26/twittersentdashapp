@@ -92,6 +92,7 @@ df=fetch_data(fs)
 dffiltered=df[df['search_query'].isin(['#Australia'])  ].sort_values(by=['create_date'],ascending=True)
 
 df_unique_query=df[['partition_1','partition_0','search_query']].drop_duplicates()
+df_unique_query=df_unique_query.sort_values(by=['partition_0','partition_1'])
 multiselect_options=[]
 for index,row in df_unique_query.iterrows():
     label_string=row['partition_0'] + ' - ' + row['partition_1'] + ' (' + row['search_query'] + ')'
@@ -109,6 +110,7 @@ fig_treemap=update_map_fig(df=df,search_query_selected=search_query_selected,cre
 app.layout = html.Div([
     dcc.Markdown('''
     ## The Tweet Sentiment Project
+    Contains a sample of around 3000 tweets per day per category.
     Click on a specific date on the graph to see the Word Frequency and Top Tweets from that search query. *Created by:* [*William Jiang*](https://iamwilliamj.com).
     '''),
     html.Div(id='dd-output-container'),
