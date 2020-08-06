@@ -12,6 +12,8 @@ import s3fs
 import os
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
+from flask_caching import Cache
+
 
 def update_datatable(df,search_query_selected,create_date_selected):
     dffiltered=df[df['search_query'].isin([search_query_selected]) ].sort_values(by=['create_date'],ascending=True)
@@ -72,6 +74,7 @@ def fetch_data(fs):
     return df
 
 app = dash.Dash(__name__,   external_stylesheets=[dbc.themes.BOOTSTRAP])
+
 
 app.scripts.config.serve_locally = True
 app.css.config.serve_locally = True
