@@ -12,7 +12,6 @@ import s3fs
 import os
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
-from flask_caching import Cache
 
 
 def update_datatable(df,search_query_selected,create_date_selected):
