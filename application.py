@@ -106,7 +106,7 @@ for index,row in df_unique_query.iterrows():
     multiselect_options.append({'label':label_string, 'value': row['search_query']})
 
 #Initial conditions
-create_date_selected=max(df['create_date'])
+create_date_selected=max(df['create_date']) - timedelta(days=1)
 search_query_selected='#Australia'
 
 #Initialize the charts
