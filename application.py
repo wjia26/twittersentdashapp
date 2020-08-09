@@ -5,7 +5,7 @@ import dash_table
 import plotly.express as px
 import pandas as pd
 import pythena
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import json
 import ast
 import s3fs
@@ -50,17 +50,25 @@ def update_map_fig(df,search_query_selected,create_date_selected):
     return fig_treemap
 
 def fetch_data(fs):
-    ##generate list of files in folder 'data':
+    #Remove files that are two days old
+    for file in os.listdir('data'):
+        file_date=datetime.strptime(file.split('.csv')[0],'%Y-%m-%d').date()
+        delete_file_path='data/' + file
+        if file_date>=date.today()-timedelta(days=1):
+            if os.path.exists(delete_file_path):
+                os.remove(delete_file_path)
+
+    ##generate list of files in folder 'data':   
     file_exist_arr=[]
     for file in os.listdir('data'):
-        file_exist_arr.append(file)
-    file_exist_arr
+        file_exist_arr.append(file) 
 
+    #Repopulate till latest
     for file1 in fs.listdir('aggregatedresultsforapp'):
         file_name=file1['Key'].split('/')[-1]
         read_file_path=file1['Key']
+        write_file_path='data/' + file_name
         if file_name not in file_exist_arr:
-            write_file_path='data/' + file_name
             fs.download(read_file_path,write_file_path)
 
     # Read the initial file
@@ -151,7 +159,11 @@ app.layout = html.Div([
             id='tweettable',
             style_cell_conditional=[
                 {'if': {'column_id': 'text'},
-                'width': '70%'},
+                'width': '70%'
+                },                
+                {'if': {'column_id': 'created_at'},
+                'width': '10%'
+                }
             ],
             style_data={
         'overflow': 'hidden',
