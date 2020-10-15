@@ -80,7 +80,7 @@ def fetch_data(fs):
     df['create_date']=pd.to_datetime(df['create_date'])
     return df
 
-app = dash.Dash(__name__,   external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__,   external_stylesheets=[dbc.themes.BOOTSTRAP], meta_tags=[ {"property":"og:image", "content":"displayimg.jpg" }])
 
 
 app.scripts.config.serve_locally = True
