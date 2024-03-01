@@ -7,7 +7,7 @@ dash == 1.13.4
 dash_bootstrap_components == 0.10.3
 
 # C:\Users\William Jiang\Documents\twitter-sent-dashapp\application.py: 3
-dash_core_components == 1.10.1
+dash_core_components == 2.0.0
 
 # C:\Users\William Jiang\Documents\twitter-sent-dashapp\application.py: 2
 dash_html_components == 1.0.3
